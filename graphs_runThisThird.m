@@ -1,31 +1,15 @@
 figure;
 hold on;
-snr = zeros(height(spikeData));
 for k = 1:length(files)
     fileName = files(k).name;
-    if strcmp(fileName, '.') || strcmp(fileName, '..')
-        continue;
-    end
-    fullFilePath = fullfile(folderPath, fileName);
-    if ~files(k).isdir
+    if strcmp(fileName, '.png') || strcmp(fileName, '..png')
+        fullFilePath = fullfile(folderPath, fileName);
         delete(fullFilePath);
         fprintf('Deleted: %s\n', fullFilePath);
     end
 end
-
-spikes = zeros(1, 16);
-% Identify rows where the first column is equal to x
-for h=1:height(eventArr)
-    for j = 1:16
-        if j == eventArr(h, 1)
-            spikes(j) = spikes(j) + 1;
-        end
-    end
-end
-spikesInFile = sum(spikes);
 for p = 1:filenum
     for k = 1:spikesInFile
-        snr(k) = eventArr(k, 5)/rms(filenum); %todo, change rms based on probe (file)
         % Plot spike (peak and trough) centered around the spike index
         time_axis_ms = ((1:length(spikeData(k,:))) - ms_before * ms_to_event) * event_to_ms;
         plot(time_axis_ms, spikeData(k, :));

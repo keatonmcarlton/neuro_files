@@ -8,10 +8,9 @@ files = dir(fullfile(folderPath, '*'));
 targetFolder = fullfile(fileparts(mfilename('fullpath')), folderPath);
 filenum = 1;
 
-cutoffConstant = 6;
+cutoffConstant = 5;
 cutoffVals(1, :) = cutoffConstant * sigmaVals;
-upperCutoff = 150;
-cutoffVals(2, :) = upperCutoff;
+cutoffVals(2, :) = 30*sigmaVals;
 
 eventArr = zeros(height(newData), 5);
 % eventArr = [fileOrigin, spike zero crossing, depolarization end]
@@ -21,11 +20,12 @@ png = 1;
 i = 1;
 spikes = 0;
 b = [0,0,0];
-%for i =1: length(newData)
-    cutoff = cutoffVals(i);
+for i =1: numElectrodes
+    cutoff = cutoffVals(1, i);
+    upperCutoff = cutoffVals(2, i);
     for j=2:height(newData)
         zeroCrossingIndices = [0,0,0];
-        if (newData(j, i) > cutoffVals(i) && newData(j-1, i) <= cutoffVals(i))
+        if (newData(j, i) > cutoff && newData(j-1, i) <= cutoff)
             % Check for the next 2 zero crossings after the threshold
             zeroCrossingIndices(1) = find(newData(j:-1:1, i) <= 0, 1);
             zeroCrossingIndices(2) = find(newData(j:end, i) <= 0, 1) + j;
@@ -64,7 +64,7 @@ b = [0,0,0];
                 j = j + 1;
             end
             %zeroCrossingIndices = [0,0];
-        elseif (newData(j,i) < -cutoffVals(i) && newData(j-1, i) >= cutoffVals(i))
+        elseif (newData(j,i) < -cutoff && newData(j-1, i) >= cutoff)
                 % Check for the next zero crossing after the threshold
             zeroCrossingIndices(1) = find(newData(j:-1:1, i) >= 0, 1);
             zeroCrossingIndices(2) = find(newData(j:end, i) >= 0, 1) + j;
@@ -105,15 +105,15 @@ b = [0,0,0];
             j = j + 1;
         end
     end
-%end
+end
 noise = newData(:, 1);
-rms = zeros(1, filenum);
+rms = zeros(1, numElectrodes);
 zeroRows = all(eventArr == 0, 2);
 eventArr(zeroRows, :) = [];
 %trims the fat and makes a noise array
 
 % this checks that no 2 spikes are counted twice
-for i = height(eventArr)-1:-1:2
+for i = height(eventArr):-1:2
     if eventArr(i, 3) == eventArr(i-1, 3)
         eventArr(i-1, :) = [];
     end
@@ -166,6 +166,19 @@ for i = 1:1 %num probes
         end
     end
 end
-
-% zeroRows = all(spikeData == 0, 2);
-% spikeData(zeroRows, :) = [];
+snr = zeros(height(spikeData));
+spikes = zeros(1, 16);
+% Identify rows where the first column is equal to x
+for h=1:height(eventArr)
+    for j = 1:16
+        if j == eventArr(h, 1)
+            spikes(j) = spikes(j) + 1;
+        end
+    end
+end
+spikesInFile = sum(spikes);
+for p = 1:numElectrodes
+    for k = 1:spikesInFile
+        snr(k) = eventArr(k, 5)/rms(filenum);
+    end
+end
