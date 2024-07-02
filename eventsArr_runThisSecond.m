@@ -145,8 +145,6 @@ ms_before = 6;
 ms_after = 6;
 spikes = 0;
 %% 
-sizeOfWindow = length(newData(eventArr(1, 3)-(ms_before*ms_to_event): ...
-                (eventArr(1, 3))+(ms_after*ms_to_event), 1));
 spikeData = zeros( height(eventArr),1+(ms_after+ms_before)*ms_to_event);
 spikesPerFile = zeros(1, 16);
 for i = 1:1 %num probes
