@@ -8,7 +8,7 @@ fileList = dir(fullfile(folderPath, '*.ncs'));
 spikesPerFile = zeros(1, 16);
 % Get a list of all NCS files in the specified directory
 
-numElectrodes = height(fileList); % Get the number of NCS files
+numElectrodes = (height(fileList)); % Get the number of NCS files
 % oldData array to store reshaped data before common average referencing
 
 for fileIdx = 1:numElectrodes
@@ -16,13 +16,20 @@ for fileIdx = 1:numElectrodes
     filename = fullfile(folderPath, fileList(fileIdx).name); 
     % Get the full file path
 
-    [timestamps, channelNumbers, ~, ...
-        ~, Samples, header] ...
-    = Nlx2MatCSC(filename, [1 1 1 1 1], 1, 1, []);
+    [timestamps, channelNumbers, sampleFrequencies, numberOfValidSamples, Samples, header] = Nlx2MatCSC(filename, [1 1 1 1 1], 1, 1, []);
+    %[timestamps, channelNumbers, ~, ...
+    %    ~, Samples, header] ...
+    %= Nlx2MatCSC(filename, [1 1 1 1 1], 1, 1, []);
+    %this function reads neuralynx data set into matlab (.csc file)
+
     if fileIdx == 1
         oldData = zeros(512 * length(Samples), numElectrodes); % Initialize oldData array
     end
-    %this function reads neuralynx data set into matlab (.csc file)
+
+    Samples = single(Samples);
+    timestamps = single(timestamps);
+    oldData = single(oldData);
+    %%reducing space complexity, can increase later
 
     reshapedData = (reshape((Samples), [], 1)); 
     % reshape data and store it in the oldData array (as a column)
@@ -31,13 +38,11 @@ for fileIdx = 1:numElectrodes
     oldData(:, fileIdx) = (reshapedData); 
     % store in oldData
 end
-timestamps = single(timestamps);
-
-%%reducing space complexity, can increase later
-
 %%now we have our data in a usable format. we can edit and perform
 %%noise detection and reduction on this data set now
 
+channelNumbers = uint16(channelNumbers);
+%%reducing memory requirement, can increase later
 
 oldData = (oldData * bitvolts_to_volts * 1e6);
 %our data, as given from the header in the files, is in bitvolts. this
@@ -48,14 +53,13 @@ oldData = (oldData * bitvolts_to_volts * 1e6);
 %%among the electrodes are "noise" (overgeneralizing for now) to get us a
 %%decent idea of the noise floor so we can subtract noise.
 
-Average = (mean(oldData(:, :), 2));
+Average = single(mean(oldData(:, :), 2));
 %average across all rows
 
 newData = oldData - Average;
 %subtract the common average
-single(oldData);
-single(newData);
-single(Average);
+
+numElectrodes = 1; %size(oldData, 2);
 
 %How many files we have. useful for iterating
 
@@ -89,8 +93,8 @@ endingIndex = length(time_axis_ms);
 %%end debugging options%%
 
 figure;
-for i = 1:1
-    %subplot(numElectrodes, 1, i);
+for i = 1:numElectrodes
+    subplot(numElectrodes, 1, i);
     plot(time_axis_ms(startingIndex:Tread:endingIndex), ...
         oldData(startingIndex:Tread:endingIndex, i));
     %here you might replace "end" with "endingIndex" and at the others
@@ -107,6 +111,8 @@ end
 figure;
 plot(time_axis_ms(startingIndex:Tread:endingIndex), ...
     Average(startingIndex:Tread:endingIndex));
+recordingLength = string((time_axis_ms(endingIndex) / 60000));
+disp(['This recording has a duration of ', recordingLength, 'minutes']);
 
 xlabel("Time(ms)");
 ylabel("Averaged Voltage(uV)");
@@ -120,8 +126,8 @@ ax.XAxis.Exponent = 0;
 
 sigmaVals = std(newData);
 figure;
-for i = 1:1
-    %subplot(numElectrodes, 1, i);
+for i = 1:numElectrodes
+    subplot(numElectrodes, 1, i);
     plot(time_axis_ms(startingIndex:Tread:endingIndex), ...
         newData(startingIndex:Tread:endingIndex, i));
 
@@ -133,5 +139,6 @@ for i = 1:1
     ax = gca;
     ax.XAxis.Exponent = 0;
     %%saveas(gcf, pngFileName, 'png');
+    %Mat2NlxCSC(['afterCAR',num2str(i),'.ncs'], 0, 1, 1, [1 1 1 1 1 1], timestamps, channelNumbers, sampleFrequencies, numberOfValidSamples, Samples, header);
+    % reads matlab csc file into neuralynx data set
 end
-clear oldData;
