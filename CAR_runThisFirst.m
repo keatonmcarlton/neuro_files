@@ -107,6 +107,8 @@ endingIndex = length(time_axis_ms);
 
 %%end debugging options%%
 
+% changes directory and saves the old directory's file path
+outsideFolderPath = cd("after_CAR_ncs_files\");
 for i = 1:16
     fileName = [num2str(i), '.ncs'];
     outputData = int16(reshape(newData(:, i), 512, [])/(bitvolts_to_volts*1e6));
@@ -115,6 +117,7 @@ for i = 1:16
     [1 1 1 1 1 1], timestamps, (exportChannels(i,:)-1),...
     SampleFrequencies, NumberOfValidSamples, outputData, exportHeaders(:,i));
 end
+cd(outsideFolderPath)
 
 figure;
 for i = 1:numChannels
@@ -135,6 +138,9 @@ end
 figure;
 plot(time_axis_ms(startingIndex:Tread:endingIndex), ...
     Average(startingIndex:Tread:endingIndex));
+
+recordingLength = string((time_axis_ms(endingIndex) / 60000));
+disp(['This recording has a duration of ', recordingLength, 'minutes']);
 
 xlabel("Time(ms)");
 ylabel("Averaged Voltage(uV)");
