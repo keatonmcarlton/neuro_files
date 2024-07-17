@@ -1,16 +1,24 @@
+files = dir(fullfile(folderPath, '*'));
+targetFolder = fullfile(fileparts(mfilename('fullpath')), folderPath);
+
 figure;
 hold on;
 snr = zeros(height(spikeData));
-for k = 1:length(files)
-    fileName = files(k).name;
-    if strcmp(fileName, '.') || strcmp(fileName, '..')
-        continue;
+%%%% could be more efficient?
+folderPath = 'graphs_for_stats';
+for n = 1:2
+    for k = 1:length(files)
+        fileName = files(k).name;
+        if strcmp(fileName, '.') || strcmp(fileName, '..')
+            continue;
+        end
+        fullFilePath = fullfile(folderPath, fileName);
+        if ~files(k).isdir
+            delete(fullFilePath);
+            fprintf('Deleted: %s\n', fullFilePath);
+        end
     end
-    fullFilePath = fullfile(folderPath, fileName);
-    if ~files(k).isdir
-        delete(fullFilePath);
-        fprintf('Deleted: %s\n', fullFilePath);
-    end
+    folderPath = 'images_spikes';
 end
 
 spikes = zeros(1, 16);
@@ -43,7 +51,7 @@ for m = 1:height(fileList)
 end
 disp(['Spikes per minute: ', num2str(spikesPerMin)]);
 xlabel('Time (ms)');
-ylabel('Voltage (mV)');
+ylabel('Voltage (μV)');
 title(['Overlayed Spikes (Aligned at Inflection), cutoff:' ...
     num2str(cutoffConstant) ' sigma']);
 legend('Neural Signal');
@@ -59,7 +67,7 @@ for l=1:height(spikeData)
     xline(0,'--b');
     yline(0, '--r');
     xlabel('Time (ms)');
-    ylabel('Voltage (mV)');
+    ylabel('Voltage (μV)');
     title(['Spike Number ' num2str(l) ': SNR:' num2str(snr(l)) ...
         ' cutoff:' num2str(cutoffConstant) 'sigma']);
     legend('Neural Signal');
@@ -68,9 +76,49 @@ for l=1:height(spikeData)
     disp(['SNR for spike ', num2str(l),': ',num2str(snr(l))]);
     disp(['Peak-Trough value for spike ', num2str(l), ': ',num2str(eventArr(l,6))])
 end
-%individual graphs
 
+%individual graphs
+folderPath = 'graphs_for_stats';
+targetFolder = fullfile(fileparts(mfilename('fullpath')), folderPath);
 % need to adjust so that it works for either as an array (like for snr) or is just a
 % single value (like for peak-trough)
-disp(['Average SNR: ',(num2str((sum(snr))/spikesInFile))])
-disp(['Average Peak-Trough value: ',(num2str((sum(eventArr(:,6)))/spikesInFile))])
+%disp(['Average SNR: ',(num2str((sum(snr))/spikesInFile))])
+%disp(['Average Peak-Trough value: ',(num2str((sum(eventArr(:,6)))/spikesInFile))])
+% adjust so that all of the channels are on each graph?
+filePath = fullfile(targetFolder, ['SNR histogram.png']);
+figure;
+% need to transpose?
+histogram((snr(:,1)));
+ylabel('Number of Spikes');
+xlabel('SNR (N/A)');
+title('SNR for spikes in channel 1:');
+saveas(gcf, filePath);
+
+filePath = fullfile(targetFolder, ['SNR boxplot.png']);
+figure;
+bp = boxplot(snr(:,1));
+disp(['Minimum SNR value: ', num2str(min(snr(:,1)))]);
+disp(['Maximum SNR value: ', num2str(max(snr(:,1)))]);
+disp(['Median SNR value: ', num2str(median(snr(:,1)))]);
+disp(['25th and 75th Quantile SNR values: ', num2str(quantile(snr(:,1),[0.25,0.75]))]);
+disp(['Interquartile range SNR value: ', num2str(iqr(snr(:,1)))]);
+disp(['Average SNR value: ', num2str(grpstats(snr(:,1)))]);
+xlabel('Spike Number');
+ylabel('SNR (N/A)');
+title('SNR for spikes in channel 1:');
+saveas(gcf, filePath);
+
+filePath = fullfile(targetFolder, ['P-T boxplot.png']);
+figure;
+%bar(eventArr(:,6));
+boxplot(eventArr(:,6));
+disp(['Minimum P-T value: ', num2str(min(eventArr(:,6)))]);
+disp(['Maximum P-T value: ', num2str(max(eventArr(:,6)))]);
+disp(['Median P-T value: ', num2str(median(eventArr(:,6)))]);
+disp(['25th and 75th Quantile P-T values: ', num2str(quantile(eventArr(:,6),[0.25,0.75]))]);
+disp(['Interquartile range P-T value: ', num2str(iqr(eventArr(:,6)))]);
+disp(['Average P-T value: ', num2str(grpstats(eventArr(:,6)))]);
+xlabel('Spike Number');
+ylabel('Peak-Trough (μV)');
+title('Peak-Trough value for spikes in channel 1:');
+saveas(gcf, filePath);
