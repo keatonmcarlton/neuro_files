@@ -1,25 +1,26 @@
 files = dir(fullfile(folderPath, '*'));
+folderPath = 'images_spikes';
 targetFolder = fullfile(fileparts(mfilename('fullpath')), folderPath);
 
 figure;
 hold on;
 snr = zeros(height(spikeData));
 %%%% could be more efficient?
-folderPath = 'graphs_for_stats';
-for n = 1:2
+%for n = 1:2
     for k = 1:length(files)
         fileName = files(k).name;
         if strcmp(fileName, '.') || strcmp(fileName, '..')
             continue;
         end
-        fullFilePath = fullfile(folderPath, fileName);
+        %fullFilePath = fullfile(folderPath, fileName);
         if ~files(k).isdir
-            delete(fullFilePath);
-            fprintf('Deleted: %s\n', fullFilePath);
+            %delete(fullFilePath);
+            delete(fullfile('graphs_for_stats', fileName))
+            delete(fullfile('images_spikes', fileName))
+            %fprintf('Deleted: %s\n', fullFilePath);
         end
     end
-    folderPath = 'images_spikes';
-end
+%end
 
 spikes = zeros(1, 16);
 % Identify rows where the first column is equal to x
@@ -79,6 +80,8 @@ end
 
 %individual graphs
 folderPath = 'graphs_for_stats';
+targetFolder = fullfile(fileparts(mfilename('fullpath')), folderPath);
+
 targetFolder = fullfile(fileparts(mfilename('fullpath')), folderPath);
 % need to adjust so that it works for either as an array (like for snr) or is just a
 % single value (like for peak-trough)
