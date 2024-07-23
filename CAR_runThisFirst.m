@@ -21,10 +21,10 @@ spikesPerFile = zeros(1, 16);
 % Get a list of all NCS files in the specified directory
 exportHeaders = [];
 exportTimestamps = [];
-numChannels = (height(fileList)); % Get the number of NCS files
+numChannels = (width(fileList)); % Get the number of NCS files
 % oldData array to store reshaped data before common average referencing
 
-for fileIdx = 1:16
+for fileIdx = 1:numChannels
     % read data from the NCS file
     filename = fullfile(folderPath, fileList(fileIdx).name); 
     % Get the full file path
@@ -109,28 +109,28 @@ endingIndex = length(time_axis_ms);
 
 % changes directory and saves the old directory's file path
 outsideFolderPath = cd("after_CAR_ncs_files\");
-for i = 1:16
-    fileName = [num2str(i), '.ncs'];
-    outputData = int16(reshape(newData(:, i), 512, [])/(bitvolts_to_volts*1e6));
+for j = 1:numChannels
+    fileName = [num2str(j), '.ncs'];
+    outputData = int16(reshape(newData(:, j), 512, [])/(bitvolts_to_volts*1e6));
     outputData = double(outputData);
     Mat2NlxCSC(fileName, 0, 1, 1,...
-    [1 1 1 1 1 1], timestamps, (exportChannels(i,:)-1),...
-    SampleFrequencies, NumberOfValidSamples, outputData, exportHeaders(:,i));
+    [1 1 1 1 1 1], timestamps, (exportChannels(j,:)-1),...
+    SampleFrequencies, NumberOfValidSamples, outputData, exportHeaders(:,j));
 end
 cd(outsideFolderPath)
 
 figure;
-for i = 1:numChannels
-    subplot(numChannels, 1, i);
+for k = 1:numChannels
+    subplot(numChannels, 1, k);
     plot(time_axis_ms(startingIndex:Tread:endingIndex), ...
-        oldData(startingIndex:Tread:endingIndex, i));
+        oldData(startingIndex:Tread:endingIndex, k));
     %here you might replace "end" with "endingIndex" and at the others
 
     xlabel("Time(ms)");
-    ylabel("Raw Voltage(uV)");
+    ylabel("Raw Voltage(μV)");
     ylim([lower_limit upper_limit]);
-    pngFileName = ['CSC_', num2str(i), ' before CAR'];
-    title(['CSC ', num2str(i), ' before CAR']);
+    pngFileName = ['CSC_', num2str(k), ' before CAR'];
+    title(['CSC ', num2str(k), ' before CAR']);
     ax = gca;
     ax.XAxis.Exponent = 0;
     %%saveas(gcf, pngFileName, 'png');
@@ -143,7 +143,7 @@ recordingLength = string((time_axis_ms(endingIndex) / 60000));
 disp(['This recording has a duration of ', recordingLength, 'minutes']);
 
 xlabel("Time(ms)");
-ylabel("Averaged Voltage(uV)");
+ylabel("Averaged Voltage(μV)");
 ylim([lower_limit upper_limit]);
 pngFileName = 'Average of all';
 title('Average of all');
@@ -154,16 +154,16 @@ ax.XAxis.Exponent = 0;
 
 sigmaVals = std(newData);
 figure;
-for i = 1:numChannels
-    subplot(numChannels, 1, i);
+for l = 1:numChannels
+    subplot(numChannels, 1, l);
     plot(time_axis_ms(startingIndex:Tread:endingIndex), ...
-        newData(startingIndex:Tread:endingIndex, i));
+        newData(startingIndex:Tread:endingIndex, l));
 
     xlabel("Time(ms)");
-    ylabel("Raw Voltage - CAR(uV)");
+    ylabel("Raw Voltage - CAR(μV)");
     ylim([lower_limit upper_limit]);
-    pngFileName = ['CSC_', num2str(i), ' after CAR'];
-    title(['CSC ', num2str(i), ' after CAR']);
+    pngFileName = ['CSC_', num2str(l), ' after CAR'];
+    title(['CSC ', num2str(l), ' after CAR']);
     ax = gca;
     ax.XAxis.Exponent = 0;
     %%saveas(gcf, pngFileName, 'png');
