@@ -108,16 +108,31 @@ endingIndex = length(time_axis_ms);
 %%end debugging options%%
 
 % changes directory and saves the old directory's file path
-outsideFolderPath = cd("after_CAR_ncs_files\");
-for j = 1:numChannels
+originalDir =pwd;
+if ~isfolder("after_CAR_ncs_files")
+    mkdir("after_CAR_ncs_files");
+end
+cd("after_CAR_ncs_files\");
+format longG;
+currentDateTime = datetime("now");
+formattedDateTime = datestr(currentDateTime, 'yyyy-mm-dd_HHMMSS');
+timeFolder = ['Generated_Data_' formattedDateTime];
+if ~isfolder(timeFolder)
+    mkdir(timeFolder);
+end
+cd(timeFolder);
+for j = 1:16
     fileName = [num2str(j), '.ncs'];
     outputData = int16(reshape(newData(:, j), 512, [])/(bitvolts_to_volts*1e6));
     outputData = double(outputData);
+    addpath(originalDir);
     Mat2NlxCSC(fileName, 0, 1, 1,...
     [1 1 1 1 1 1], timestamps, (exportChannels(j,:)-1),...
     SampleFrequencies, NumberOfValidSamples, outputData, exportHeaders(:,j));
+    rmpath(originalDir);
 end
-cd(outsideFolderPath)
+
+cd(originalDir);
 
 figure;
 for k = 1:numChannels
