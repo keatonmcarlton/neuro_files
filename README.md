@@ -2,7 +2,7 @@ How to use:
 
 Download neuro_files as a ZIP file, unzip the file somewhere appropriate.
 
-Put all 16 Neuralynx Data files (.csc) files into 'data' folder
+Put all 16 Neuralynx Data files (.csc) files into 'data' folder (**MUST be 16**)
 
 Simply run main.m, alternatively, 
 1. To view before/after Common Average Referencing, simply run CAR_runThisFirst.
