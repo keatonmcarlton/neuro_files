@@ -1,6 +1,10 @@
 %%constants
 clear;
+number_of_channels_to_process = 1;
+    %= input('How many channels to process 1-16? (1 is ~1 minute, 2 is ~2 minutes, etc): ');
+
 folderPath = 'data'; % Path to the folder containing CSC files
+addpath("MEX_FILES\");
 bitvolts_to_volts = 3.05e-8; %analog to digital conversion
 ms_to_event = 32;
 event_to_ms = 0.03125;
@@ -74,13 +78,14 @@ Average = single(mean(oldData(:, :), 2));
 newData = oldData - Average;
 %subtract the common average
 
-numChannels = 1; %size(oldData, 2);
+numChannels = 16; %size(oldData, 2);
 
 %How many files we have. useful for iterating
 
 %%debug options%%
 
-Tread = 1;
+Tread = 5;
+disp(["NOTE: the graphs have been downsampled by a factor of" Tread]);
 %How many samples we want to downscale by the factor of (quicker operations)
 
 upper_limit = 500;   lower_limit = -upper_limit; 
@@ -109,34 +114,46 @@ endingIndex = length(time_axis_ms);
 
 % changes directory and saves the old directory's file path
 originalDir =pwd;
-if ~isfolder("after_CAR_ncs_files")
-    mkdir("after_CAR_ncs_files");
+if ~isfolder("generated_data")
+    mkdir("generated_data");
 end
-cd("after_CAR_ncs_files\");
+cd("generated_data\");
+
 format longG;
 currentDateTime = datetime("now");
 formattedDateTime = datestr(currentDateTime, 'yyyy-mm-dd_HHMMSS');
 timeFolder = ['Generated_Data_' formattedDateTime];
-if ~isfolder(timeFolder)
-    mkdir(timeFolder);
+uniqueFolder = ['Generated_Data_' formattedDateTime];
+if isfolder(uniqueFolder)
+    disp(["Folder: " formattedDateTime "exists, deleting."]);
+    rmdir(uniqueFolder, 's');
 end
-cd(timeFolder);
+mkdir(uniqueFolder);
+uniqueFolderDir = fullfile(uniqueFolder);
+
+cd(uniqueFolder);
+if ~isfolder("post_CAR_NEURAVIEW_NCS_files")
+    mkdir("post_CAR_NEURAVIEW_NCS_files");
+end
+if ~isfolder("CAR'd images\")
+    mkdir("CAR'd images\");
+end
+cd("post_CAR_NEURAVIEW_NCS_files\");
+addpath(originalDir);
 for j = 1:16
     fileName = [num2str(j), '.ncs'];
     outputData = int16(reshape(newData(:, j), 512, [])/(bitvolts_to_volts*1e6));
     outputData = double(outputData);
-    addpath(originalDir);
     Mat2NlxCSC(fileName, 0, 1, 1,...
     [1 1 1 1 1 1], timestamps, (exportChannels(j,:)-1),...
     SampleFrequencies, NumberOfValidSamples, outputData, exportHeaders(:,j));
-    rmpath(originalDir);
 end
+cd ..;
+cd("CAR'd images\");
 
-cd(originalDir);
-
-figure;
-for k = 1:numChannels
-    subplot(numChannels, 1, k);
+invisible_figure = figure("Visible", false);
+for k = 1:16
+    invisible_figure;
     plot(time_axis_ms(startingIndex:Tread:endingIndex), ...
         oldData(startingIndex:Tread:endingIndex, k));
     %here you might replace "end" with "endingIndex" and at the others
@@ -144,13 +161,13 @@ for k = 1:numChannels
     xlabel("Time(ms)");
     ylabel("Raw Voltage(μV)");
     ylim([lower_limit upper_limit]);
-    pngFileName = ['CSC_', num2str(k), ' before CAR'];
+    pngFileName = ['CSC_', num2str(k), ' pre CAR'];
     title(['CSC ', num2str(k), ' before CAR']);
     ax = gca;
     ax.XAxis.Exponent = 0;
-    %%saveas(gcf, pngFileName, 'png');
+    saveas(gcf, pngFileName, 'png');
 end
-figure;
+invisible_figure;
 plot(time_axis_ms(startingIndex:Tread:endingIndex), ...
     Average(startingIndex:Tread:endingIndex));
 
@@ -164,22 +181,22 @@ pngFileName = 'Average of all';
 title('Average of all');
 ax = gca;
 ax.XAxis.Exponent = 0;
-%%saveas(gcf, pngFileName, 'png');
+saveas(gcf, pngFileName, 'png');
 %in case you want to save the image
 
 sigmaVals = std(newData);
-figure;
 for l = 1:numChannels
-    subplot(numChannels, 1, l);
+    invisible_figure;
     plot(time_axis_ms(startingIndex:Tread:endingIndex), ...
         newData(startingIndex:Tread:endingIndex, l));
 
     xlabel("Time(ms)");
     ylabel("Raw Voltage - CAR(μV)");
     ylim([lower_limit upper_limit]);
-    pngFileName = ['CSC_', num2str(l), ' after CAR'];
-    title(['CSC ', num2str(l), ' after CAR']);
+    pngFileName = ['CSC_', num2str(l), ' post CAR'];
+    title(['CSC ', num2str(l), ' post CAR']);
     ax = gca;
     ax.XAxis.Exponent = 0;
-    %%saveas(gcf, pngFileName, 'png');
+    saveas(gcf, pngFileName, 'png');
 end
+cd(originalDir);

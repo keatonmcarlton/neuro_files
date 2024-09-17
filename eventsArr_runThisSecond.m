@@ -22,7 +22,7 @@ png = 1;
 i = 1;
 spikes = 0;
 b = [0,0,0];
-%for i =1: length(newData)
+for i =1: number_of_channels_to_process
     cutoff = cutoffVals(i);
     for j=2:height(newData)
         zeroCrossingIndices = [0,0,0];
@@ -62,7 +62,7 @@ b = [0,0,0];
                         j = zeroCrossingIndices(3) - 1;
                         spikes = spikes + 1;
                     else
-                        eventArr(j, :) = [0,0,0,0,0];
+                        eventArr(j, :) = [0,0,0,0,0,0];
                         j= j+1;
                     end
                     % advance j to the second zero crossing
@@ -117,7 +117,7 @@ b = [0,0,0];
             j = j + 1;
         end
     end
-%end
+end
 noise = newData(:, 1);
 rms = zeros(1, filenum);
 zeroRows = all(eventArr == 0, 2);
