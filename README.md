@@ -10,6 +10,7 @@ Simply run main.m, alternatively,
 3. graphs_runThisThird will show graphs and statistics for the data from the 16 files
 4. Ideally, running main does all 3 of these.
 
-**All data will be placed into generated_data when complete**
+**Program creates a folder named 'generated_data.' 
+All new images and .ncs files data will be placed into generated_data when complete, and is safe to delete**
 
 NOTE: to run one file, you must run them in order. Skipping files will not work
