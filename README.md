@@ -13,4 +13,4 @@ Simply run main.m, alternatively,
 **Program creates a folder named 'generated_data.' 
 All new images and .ncs files data will be placed into generated_data when complete, and is safe to delete**
 
-NOTE: to run one file, you must run them in order. Skipping files will not work
+NOTE: to run one file, you must run all previous files in order. Skipping files will not work
