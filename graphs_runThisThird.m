@@ -119,6 +119,8 @@ disp(['Median P-T value: ', num2str(median(eventArr(:,6)))]);
 disp(['25th and 75th Quantile P-T values: ', num2str(quantile(eventArr(:,6),[0.25,0.75]))]);
 disp(['Interquartile range P-T value: ', num2str(iqr(eventArr(:,6)))]);
 disp(['Average P-T value: ', num2str(grpstats(eventArr(:,6)))]);
+disp(['STD of P-T values: ', num2str(std(eventArr(:,6)))]);
+
 ylabel('Peak-Trough (μV)');
 title('Peak-Trough value for spikes in channel 1:');
 saveas(gcf, 'P-T boxplot.png');
